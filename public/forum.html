@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Forum Discussions</title>
+    <style>
+      body {
+        font: 14px sans-serif;
+      }
+      .container {
+        max-width: 600px;
+        margin: auto;
+        padding: 20px;
+      }
+      .discussion {
+        margin-bottom: 10px;
+        padding: 5px;
+        border: 1px solid #eee;
+        border-radius: 5px;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      input,
+      textarea,
+      button {
+        padding: 10px;
+        margin: 5px 0;
+        width: 100%;
+      }
+      button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      .error {
+        color: red;
+        text-align: center;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1 id="forum-title"></h1>
+      <p id="forum-description"></p>
+      <div id="discussions"></div>
+      <h2>Add a New Discussion</h2>
+      <form id="discussion-form">
+        <div class="form-group">
+          <input id="username" placeholder="Username" required /><br />
+        </div>
+        <div class="form-group">
+          <textarea id="message" placeholder="Message" required></textarea
+          ><br />
+        </div>
+        <button type="submit">Add Discussion</button>
+      </form>
+      <p id="error-message" class="error"></p>
+    </div>
+    <script>
+      const urlParams = new URLSearchParams(window.location.search);
+      const forumId = urlParams.get('id');
+
+      async function fetchForum() {
+        try {
+          const response = await fetch(`/forums/${forumId}`);
+          if (!response.ok) {
+            throw new Error('Forum not found');
+          }
+          const forum = await response.json();
+          document.getElementById('forum-title').textContent = forum.title;
+          document.getElementById('forum-description').textContent =
+            forum.description;
+          const discussionsDiv = document.getElementById('discussions');
+          discussionsDiv.innerHTML = '';
+          forum.discussions.forEach((discussion) => {
+            const div = document.createElement('div');
+            div.className = 'discussion';
+            div.innerHTML = `<strong>${discussion.username}</strong>: ${
+              discussion.message
+            } <br><small>${new Date(
+              discussion.timestamp
+            ).toLocaleString()}</small>`;
+            discussionsDiv.appendChild(div);
+          });
+        } catch (error) {
+          document.body.innerHTML = `<p class="error">${error.message}</p>`;
+        }
+      }
+
+      document
+        .getElementById('discussion-form')
+        .addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const username = document.getElementById('username').value;
+          const message = document.getElementById('message').value;
+          try {
+            const response = await fetch(`/forums/${forumId}/discussions`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username, message }),
+            });
+            if (!response.ok) {
+              throw new Error('Failed to add discussion');
+            }
+            fetchForum();
+          } catch (error) {
+            document.getElementById('error-message').textContent =
+              error.message;
+          }
+        });
+
+      fetchForum();
+    </script>
+  </body>
+</html>

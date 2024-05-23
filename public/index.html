@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Forum</title>
+    <style>
+      body {
+        font: 14px sans-serif;
+      }
+      .container {
+        max-width: 600px;
+        margin: auto;
+        padding: 20px;
+      }
+      input,
+      button {
+        padding: 10px;
+        margin: 10px 0;
+        width: 100%;
+      }
+      button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      .error {
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Create or Open Forum</h1>
+      <form id="create-forum-form">
+        <h2>Create Forum</h2>
+        <input id="title" placeholder="Forum Title" required /><br />
+        <input
+          id="description"
+          placeholder="Forum Description"
+          required
+        /><br />
+        <button type="submit">Create Forum</button>
+      </form>
+      <form id="open-forum-form">
+        <h2>Open Forum</h2>
+        <input id="forum-id" placeholder="Enter Forum ID" required /><br />
+        <button type="submit">Open Forum</button>
+      </form>
+      <p id="message"></p>
+      <p id="error-message" class="error"></p>
+    </div>
+    <script>
+      document
+        .getElementById('create-forum-form')
+        .addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const title = document.getElementById('title').value;
+          const description = document.getElementById('description').value;
+          const response = await fetch('/forums', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, description }),
+          });
+          const result = await response.json();
+          document.getElementById(
+            'message'
+          ).textContent = `Forum created! Please note down your Forum ID: ${result.forumId}`;
+        });
+
+      document
+        .getElementById('open-forum-form')
+        .addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const forumId = document.getElementById('forum-id').value;
+          try {
+            const response = await fetch(`/forums/${forumId}`);
+            if (!response.ok) {
+              throw new Error('Forum not found');
+            }
+            window.location.href = `forum.html?id=${forumId}`;
+          } catch (error) {
+            document.getElementById('error-message').textContent =
+              error.message;
+          }
+        });
+    </script>
+  </body>
+</html>
